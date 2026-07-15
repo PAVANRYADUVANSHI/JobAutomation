@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: jobauto-backend
+    env: java
+    plan: free
+    buildCommand: cd backend && mvn clean package -DskipTests
+    startCommand: java -jar backend/target/app-1.0.0.jar
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: jobauto-db
+          property: connectionString
+      - key: DB_USER
+        fromDatabase:
+          name: jobauto-db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: jobauto-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REVIEW_MODE
+        value: MANUAL
+      - key: CORS_ORIGINS
+        value: https://jobauto.netlify.app
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_USER
+        value: pavanryadavkumsi25@gmail.com
+      - key: MAIL_PASS
+        value: ""
+      - key: ADZUNA_APP_ID
+        value: ""
+      - key: ADZUNA_APP_KEY
+        value: ""
+
+databases:
+  - name: jobauto-db
+    plan: free
+    databaseName: job_automation
+    user: jobauto

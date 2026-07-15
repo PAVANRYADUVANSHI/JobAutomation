@@ -1,0 +1,182 @@
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store';
+import { fetchQueue, updateStatus, triggerShortlist } from '../store/slices/applicationSlice';
+import { Application } from '../types';
+
+const STATUS_COLORS: Record<string, string> = {
+  SHORTLISTED: 'bg-yellow-900 text-yellow-300',
+  APPLIED: 'bg-blue-900 text-blue-300',
+  RESPONSE: 'bg-indigo-900 text-indigo-300',
+  INTERVIEW: 'bg-green-900 text-green-300',
+  REJECTED: 'bg-red-900 text-red-300',
+  OFFER: 'bg-emerald-900 text-emerald-300',
+};
+
+export default function QueuePage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { queue, loading } = useSelector((s: RootState) => s.applications);
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [trackFilter, setTrackFilter] = useState<string>('ALL');
+
+  useEffect(() => { dispatch(fetchQueue()); }, [dispatch]);
+
+  const filtered = trackFilter === 'ALL' ? queue : queue.filter(a => a.track === trackFilter);
+
+  const [coverLetters, setCoverLetters] = useState<Record<number, string>>({});
+  const [regenerating, setRegenerating] = useState<number | null>(null);
+
+  const regenerateCoverLetter = async (app: Application) => {
+    setRegenerating(app.id);
+    const res = await import('../services/api').then(m => m.default.post(`/api/applications/${app.id}/regenerate-cover-letter`));
+    setCoverLetters(prev => ({ ...prev, [app.id]: res.data.coverLetter }));
+    setRegenerating(null);
+  };
+
+  const getCoverLetter = (app: Application) => coverLetters[app.id] ?? app.coverLetter;
+  const approve = (app: Application) => dispatch(updateStatus({ id: app.id, status: 'APPLIED' }));
+  const reject = (app: Application) => dispatch(updateStatus({ id: app.id, status: 'REJECTED' }));
+  const emailApply = async (app: Application) => {
+    await import('../services/api').then(m => m.default.post(`/api/applications/${app.id}/email-apply`));
+    dispatch(updateStatus({ id: app.id, status: 'APPLIED' }));
+  };
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Review Queue</h1>
+          <p className="text-gray-400 text-sm">{queue.length} jobs shortlisted today</p>
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={trackFilter}
+            onChange={e => setTrackFilter(e.target.value)}
+            className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2"
+          >
+            <option value="ALL">All Tracks</option>
+            <option value="JAVA_FULLSTACK">Java Full-Stack</option>
+            <option value="GENAI">GenAI</option>
+          </select>
+          <button
+            onClick={() => import('../services/api').then(m => m.default.post('/api/applications/email-apply-all'))}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+          >
+            ✉ Email Apply All
+          </button>
+          <button
+            onClick={() => dispatch(triggerShortlist())}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+          >
+            Re-Shortlist
+          </button>
+        </div>
+      </div>
+
+      {loading && <p className="text-gray-400">Loading...</p>}
+
+      {filtered.length === 0 && !loading && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+          <p className="text-gray-400">Queue is empty. Run the pipeline to fetch and shortlist jobs.</p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {filtered.map(app => (
+          <div key={app.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <div
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-800 transition"
+              onClick={() => setExpanded(expanded === app.id ? null : app.id)}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${app.track === 'GENAI' ? 'bg-purple-900 text-purple-300' : 'bg-blue-900 text-blue-300'}`}>
+                    {app.track === 'GENAI' ? 'GenAI' : 'Java FS'}
+                  </span>
+                  <span className="text-xs text-gray-500">{app.resumeVersion}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[app.status] || 'bg-gray-700 text-gray-300'}`}>
+                    {app.status}
+                  </span>
+                </div>
+                <p className="text-white font-medium truncate">{app.jobListing.title}</p>
+                <p className="text-gray-400 text-sm">{app.jobListing.company} · {app.jobListing.location}</p>
+              </div>
+              <div className="flex items-center gap-3 ml-4">
+                <div className="text-right">
+                  <p className="text-green-400 font-mono font-bold">{Math.round(app.matchScore * 100)}%</p>
+                  <p className="text-gray-500 text-xs">match</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={e => { e.stopPropagation(); emailApply(app); }}
+                    className="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg transition"
+                  >
+                    ✉ Email Apply
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); approve(app); }}
+                    className="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg transition"
+                  >
+                    ✓ Apply
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); reject(app); }}
+                    className="bg-red-900 hover:bg-red-800 text-red-300 text-xs px-3 py-1.5 rounded-lg transition"
+                  >
+                    ✕ Skip
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {expanded === app.id && (
+              <div className="border-t border-gray-800 p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Source</p>
+                    <p className="text-gray-300">{app.jobListing.source}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Posted</p>
+                    <p className="text-gray-300">{app.jobListing.postedDate}</p>
+                  </div>
+                </div>
+                {app.jobListing.description && (
+                  <div>
+                    <p className="text-gray-500 text-xs mb-1">Description</p>
+                    <p className="text-gray-300 text-sm line-clamp-4">{app.jobListing.description}</p>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-gray-500 text-xs">Cover Letter Preview</p>
+                    <button
+                      onClick={() => regenerateCoverLetter(app)}
+                      disabled={regenerating === app.id}
+                      className="text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition"
+                    >
+                      {regenerating === app.id ? '↺ Regenerating...' : '↺ Regenerate'}
+                    </button>
+                  </div>
+                  <pre className="text-gray-300 text-xs bg-gray-800 rounded-lg p-3 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                    {getCoverLetter(app)}
+                  </pre>
+                </div>
+                {app.jobListing.applyUrl && (
+                  <a
+                    href={app.jobListing.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-indigo-400 hover:text-indigo-300 text-sm underline"
+                  >
+                    Open Job Listing ↗
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

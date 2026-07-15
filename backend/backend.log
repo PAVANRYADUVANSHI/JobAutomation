@@ -1,0 +1,59 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2026-07-14T19:34:56.229+05:30  INFO 6244 --- [job-automation] [           main] c.j.app.JobAutomationApplication         : Starting JobAutomationApplication v1.0.0 using Java 21.0.9 with PID 6244 (C:\portfolio\JobAutomation\backend\target\app-1.0.0.jar started by srini in c:\portfolio\JobAutomation\backend)
+2026-07-14T19:34:56.231+05:30  INFO 6244 --- [job-automation] [           main] c.j.app.JobAutomationApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-07-14T19:34:57.381+05:30  INFO 6244 --- [job-automation] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-14T19:34:57.456+05:30  INFO 6244 --- [job-automation] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 65 ms. Found 9 JPA repository interfaces.
+2026-07-14T19:34:58.323+05:30  INFO 6244 --- [job-automation] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-07-14T19:34:58.338+05:30  INFO 6244 --- [job-automation] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-14T19:34:58.340+05:30  INFO 6244 --- [job-automation] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2026-07-14T19:34:58.396+05:30  INFO 6244 --- [job-automation] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-07-14T19:34:58.397+05:30  INFO 6244 --- [job-automation] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2086 ms
+2026-07-14T19:34:58.497+05:30  INFO 6244 --- [job-automation] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-14T19:34:58.712+05:30  INFO 6244 --- [job-automation] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3a4a5f3c
+2026-07-14T19:34:58.714+05:30  INFO 6244 --- [job-automation] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-14T19:34:58.880+05:30  INFO 6244 --- [job-automation] [           main] o.f.c.internal.license.VersionPrinter    : Flyway Community Edition 9.22.3 by Redgate
+2026-07-14T19:34:58.881+05:30  INFO 6244 --- [job-automation] [           main] o.f.c.internal.license.VersionPrinter    : See release notes here: https://rd.gt/416ObMi
+2026-07-14T19:34:58.881+05:30  INFO 6244 --- [job-automation] [           main] o.f.c.internal.license.VersionPrinter    : 
+2026-07-14T19:34:58.906+05:30  INFO 6244 --- [job-automation] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:mysql://localhost:3306/job_automation (MySQL 8.0)
+2026-07-14T19:34:58.969+05:30  INFO 6244 --- [job-automation] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 2 migrations (execution time 00:00.031s)
+2026-07-14T19:34:58.990+05:30  INFO 6244 --- [job-automation] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema `job_automation`: 2
+2026-07-14T19:34:58.993+05:30  INFO 6244 --- [job-automation] [           main] o.f.core.internal.command.DbMigrate      : Schema `job_automation` is up to date. No migration necessary.
+2026-07-14T19:34:59.086+05:30  INFO 6244 --- [job-automation] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-14T19:34:59.151+05:30  INFO 6244 --- [job-automation] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
+2026-07-14T19:34:59.186+05:30  INFO 6244 --- [job-automation] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-14T19:34:59.426+05:30  INFO 6244 --- [job-automation] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-14T19:34:59.470+05:30  WARN 6244 --- [job-automation] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-14T19:34:59.471+05:30  WARN 6244 --- [job-automation] [           main] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2026-07-14T19:35:00.320+05:30  INFO 6244 --- [job-automation] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-14T19:35:00.354+05:30  INFO 6244 --- [job-automation] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-14T19:35:00.820+05:30  INFO 6244 --- [job-automation] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-14T19:35:01.825+05:30  WARN 6244 --- [job-automation] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-14T19:35:02.067+05:30  INFO 6244 --- [job-automation] [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4f549906, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@634cd45c, org.springframework.security.web.context.SecurityContextHolderFilter@5db3afff, org.springframework.security.web.header.HeaderWriterFilter@326c526a, org.springframework.web.filter.CorsFilter@329f649d, org.springframework.security.web.authentication.logout.LogoutFilter@1f4c7fd9, com.jobautomation.app.security.JwtAuthFilter@4cd7128, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@75401424, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@571ecfe2, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@65dce54c, org.springframework.security.web.session.SessionManagementFilter@2c1a86e1, org.springframework.security.web.access.ExceptionTranslationFilter@563434b4, org.springframework.security.web.access.intercept.AuthorizationFilter@1fb66050]
+2026-07-14T19:35:02.419+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.impl.StdSchedulerFactory      : Using default implementation for ThreadExecutor
+2026-07-14T19:35:02.433+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.core.SchedulerSignalerImpl    : Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+2026-07-14T19:35:02.433+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.core.QuartzScheduler          : Quartz Scheduler v.2.3.2 created.
+2026-07-14T19:35:02.434+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.simpl.RAMJobStore             : RAMJobStore initialized.
+2026-07-14T19:35:02.435+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.core.QuartzScheduler          : Scheduler meta-data: Quartz Scheduler (v2.3.2) 'quartzScheduler' with instanceId 'NON_CLUSTERED'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 10 threads.
+  Using job-store 'org.quartz.simpl.RAMJobStore' - which does not support persistence. and is not clustered.
+
+2026-07-14T19:35:02.435+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.impl.StdSchedulerFactory      : Quartz scheduler 'quartzScheduler' initialized from an externally provided properties instance.
+2026-07-14T19:35:02.435+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.impl.StdSchedulerFactory      : Quartz scheduler version: 2.3.2
+2026-07-14T19:35:02.435+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.core.QuartzScheduler          : JobFactory set to: org.springframework.scheduling.quartz.SpringBeanJobFactory@5b0af511
+2026-07-14T19:35:02.515+05:30  INFO 6244 --- [job-automation] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2026-07-14T19:35:02.516+05:30  INFO 6244 --- [job-automation] [           main] o.s.s.quartz.SchedulerFactoryBean        : Starting Quartz Scheduler now
+2026-07-14T19:35:02.516+05:30  INFO 6244 --- [job-automation] [           main] org.quartz.core.QuartzScheduler          : Scheduler quartzScheduler_$_NON_CLUSTERED started.
+2026-07-14T19:35:02.537+05:30  INFO 6244 --- [job-automation] [           main] c.j.app.JobAutomationApplication         : Started JobAutomationApplication in 6.677 seconds (process running for 7.231)
+2026-07-14T19:35:02.675+05:30  INFO 6244 --- [job-automation] [           main] c.j.app.config.SeedDataRunner            : Startup check: 1 candidate profile(s) loaded
