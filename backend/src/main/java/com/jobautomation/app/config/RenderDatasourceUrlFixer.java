@@ -15,12 +15,22 @@ public class RenderDatasourceUrlFixer implements ApplicationContextInitializer<C
     @Override
     public void initialize(ConfigurableApplicationContext ctx) {
         ConfigurableEnvironment env = ctx.getEnvironment();
-        String url = env.getProperty("SPRING_DATASOURCE_URL", "");
-        if (url.startsWith("postgres://")) {
-            String fixed = "jdbc:postgresql://" + url.substring("postgres://".length());
-            env.getPropertySources().addFirst(new MapPropertySource(
-                "renderUrlFix", Map.of("spring.datasource.url", fixed)
-            ));
+        // Render injects DB URL under multiple possible env var names
+        String[] candidates = {"SPRING_DATASOURCE_URL", "DATABASE_URL", "DB_URL"};
+        for (String key : candidates) {
+            String url = env.getProperty(key, "");
+            if (url.startsWith("postgres://")) {
+                String fixed = "jdbc:postgresql://" + url.substring("postgres://".length());
+                env.getPropertySources().addFirst(new MapPropertySource(
+                    "renderUrlFix", Map.of("spring.datasource.url", fixed)
+                ));
+                return;
+            } else if (url.startsWith("jdbc:postgresql://")) {
+                env.getPropertySources().addFirst(new MapPropertySource(
+                    "renderUrlFix", Map.of("spring.datasource.url", url)
+                ));
+                return;
+            }
         }
     }
 }
