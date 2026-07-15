@@ -3,56 +3,59 @@ package com.jobautomation.app.config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
 
-@Configuration @Slf4j
+@Configuration
+@Slf4j
 public class DataSourceConfig {
 
-    @Value("${spring.datasource.url:}") private String url;
-    @Value("${DATABASE_URL:}") private String databaseUrl;
-    @Value("${spring.datasource.username:postgres}") private String username;
-    @Value("${spring.datasource.password:}") private String password;
-
-    @Bean @Primary
+    @Bean
+    @Primary
     public DataSource dataSource() {
-        String resolved = resolveUrl();
-        log.info("DataSource URL resolved: {}", resolved.replaceAll(":[^:@]+@", ":***@"));
+        // Render auto-injects DATABASE_URL on every service with a linked DB.
+        // Also check SPRING_DATASOURCE_URL (set via render.yaml envVars).
+        // Fall back to localhost for local dev.
+        String raw = firstNonBlank(
+            System.getenv("DATABASE_URL"),
+            System.getenv("SPRING_DATASOURCE_URL"),
+            System.getProperty("spring.datasource.url"),
+            "jdbc:postgresql://localhost:5432/job_automation"
+        );
 
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(resolved);
-        config.setDriverClassName("org.postgresql.Driver");
-        config.setMaximumPoolSize(3);
-        config.setMinimumIdle(1);
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
-        config.setConnectionInitSql("SELECT 1");
+        String jdbcUrl = raw.startsWith("postgres://")
+            ? "jdbc:postgresql://" + raw.substring("postgres://".length())
+            : raw;
 
-        // For postgres:// URLs, username/password are embedded — don't set separately
-        if (!resolved.contains("@")) {
-            config.setUsername(username);
-            config.setPassword(password);
+        log.info("DataSource connecting to: {}", jdbcUrl.replaceAll(":[^/@:]+@", ":***@"));
+
+        // For postgres:// style URLs, credentials are embedded in the URL
+        boolean credsEmbedded = raw.startsWith("postgres://") || jdbcUrl.contains("@");
+
+        HikariConfig cfg = new HikariConfig();
+        cfg.setJdbcUrl(jdbcUrl);
+        cfg.setDriverClassName("org.postgresql.Driver");
+        cfg.setMaximumPoolSize(3);
+        cfg.setMinimumIdle(1);
+        cfg.setConnectionTimeout(30000);
+        cfg.setIdleTimeout(600000);
+        cfg.setMaxLifetime(1800000);
+
+        if (!credsEmbedded) {
+            cfg.setUsername(firstNonBlank(System.getenv("DB_USER"), System.getenv("PGUSER"), "postgres"));
+            cfg.setPassword(firstNonBlank(System.getenv("DB_PASS"), System.getenv("PGPASSWORD"), ""));
         }
 
-        return new HikariDataSource(config);
+        return new HikariDataSource(cfg);
     }
 
-    private String resolveUrl() {
-        // Try SPRING_DATASOURCE_URL first, then DATABASE_URL
-        String raw = (url != null && !url.isBlank()) ? url : databaseUrl;
-        if (raw == null || raw.isBlank()) {
-            return "jdbc:postgresql://localhost:5432/job_automation";
+    private String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
         }
-        // Render injects postgres:// — rewrite to jdbc:postgresql://
-        if (raw.startsWith("postgres://")) {
-            return "jdbc:postgresql://" + raw.substring("postgres://".length());
-        }
-        return raw;
+        return "";
     }
 }
