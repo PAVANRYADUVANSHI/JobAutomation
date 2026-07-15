@@ -3,7 +3,7 @@ services:
     name: jobauto-backend
     env: java
     plan: free
-    buildCommand: cd backend && mvn clean package -DskipTests
+    buildCommand: cd backend && ./mvnw clean package -DskipTests
     startCommand: java -jar backend/target/app-1.0.0.jar
     healthCheckPath: /actuator/health
     envVars:
