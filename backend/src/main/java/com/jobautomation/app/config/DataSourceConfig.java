@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+import java.net.URI;
 
 @Configuration
 @Slf4j
@@ -23,11 +24,9 @@ public class DataSourceConfig {
             "jdbc:postgresql://localhost:5432/job_automation"
         );
 
-        String jdbcUrl = toJdbcUrl(raw);
-        log.info("DataSource URL: {}", jdbcUrl.replaceAll(":[^/@:]+@", ":***@"));
+        log.info("Raw DB URL scheme: {}", raw.split("://")[0]);
 
         HikariConfig cfg = new HikariConfig();
-        cfg.setJdbcUrl(jdbcUrl);
         cfg.setDriverClassName("org.postgresql.Driver");
         cfg.setMaximumPoolSize(3);
         cfg.setMinimumIdle(1);
@@ -35,43 +34,38 @@ public class DataSourceConfig {
         cfg.setIdleTimeout(600000);
         cfg.setMaxLifetime(1800000);
 
-        if (!jdbcUrl.contains("@")) {
+        try {
+            // Normalize to a parseable URI by ensuring jdbc: prefix is removed
+            // and scheme is postgresql://
+            String uriStr = raw
+                .replaceFirst("^jdbc:", "")
+                .replaceFirst("^postgres://", "postgresql://");
+
+            URI uri = new URI(uriStr);
+            String host = uri.getHost();
+            int port = uri.getPort() > 0 ? uri.getPort() : 5432;
+            String db = uri.getPath().replaceFirst("^/", "");
+            String userInfo = uri.getUserInfo();
+
+            String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, db);
+            log.info("DataSource JDBC URL: {}", jdbcUrl);
+            cfg.setJdbcUrl(jdbcUrl);
+
+            if (userInfo != null && userInfo.contains(":")) {
+                cfg.setUsername(userInfo.split(":", 2)[0]);
+                cfg.setPassword(userInfo.split(":", 2)[1]);
+            } else {
+                cfg.setUsername(firstNonBlank(System.getenv("DB_USER"), System.getenv("PGUSER"), "postgres"));
+                cfg.setPassword(firstNonBlank(System.getenv("DB_PASS"), System.getenv("PGPASSWORD"), ""));
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse DB URL, using raw: {}", e.getMessage());
+            cfg.setJdbcUrl(raw.startsWith("jdbc:") ? raw : "jdbc:" + raw);
             cfg.setUsername(firstNonBlank(System.getenv("DB_USER"), System.getenv("PGUSER"), "postgres"));
             cfg.setPassword(firstNonBlank(System.getenv("DB_PASS"), System.getenv("PGPASSWORD"), ""));
         }
 
         return new HikariDataSource(cfg);
-    }
-
-    private String toJdbcUrl(String raw) {
-        // Remove jdbc: prefix to normalize
-        String url = raw.startsWith("jdbc:") ? raw.substring(5) : raw;
-
-        // Normalize to postgresql://
-        if (url.startsWith("postgres://")) {
-            url = "postgresql://" + url.substring("postgres://".length());
-        }
-
-        // Inject :5432 before the path if no port present
-        // e.g. postgresql://user:pass@host/db  →  postgresql://user:pass@host:5432/db
-        if (url.startsWith("postgresql://")) {
-            // Find the @ then look for host part
-            int atIdx = url.lastIndexOf('@');
-            if (atIdx >= 0) {
-                String afterAt = url.substring(atIdx + 1); // host/db or host:port/db
-                if (!afterAt.contains(":")) {
-                    // No port — inject :5432 before the /
-                    int slashIdx = afterAt.indexOf('/');
-                    if (slashIdx >= 0) {
-                        String host = afterAt.substring(0, slashIdx);
-                        String rest = afterAt.substring(slashIdx);
-                        url = url.substring(0, atIdx + 1) + host + ":5432" + rest;
-                    }
-                }
-            }
-        }
-
-        return "jdbc:" + url;
     }
 
     private String firstNonBlank(String... values) {
