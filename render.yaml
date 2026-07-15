@@ -6,7 +6,6 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /actuator/health
-    port: 10000
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
