@@ -41,7 +41,20 @@ public class EmailApplyService {
 
         try {
             CandidateProfile profile = app.getCandidate();
-            String resumePath = "resumes/resume.pdf";
+            // Try version-specific resume first, fall back to generic
+            String resumePath = "resumes/" + app.getResumeVersion() + "-resume.pdf";
+            ClassPathResource resume = new ClassPathResource(resumePath);
+            if (!resume.exists()) {
+                resume = new ClassPathResource("resumes/javafullstack-resume.pdf");
+            }
+            if (!resume.exists()) {
+                resume = new ClassPathResource("resumes/resume.pdf");
+            }
+
+            if (fromEmail == null || fromEmail.isBlank()) {
+                log.warn("MAIL_USER not configured — cannot send email");
+                return false;
+            }
 
             MimeMessage msg = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true);
@@ -51,10 +64,9 @@ public class EmailApplyService {
                               " — " + profile.getName() + " | Fresher Java Full-Stack + GenAI");
             helper.setText(app.getCoverLetter(), false);
 
-            // Attach resume PDF
-            ClassPathResource resume = new ClassPathResource(resumePath);
             if (resume.exists()) {
-                helper.addAttachment("PAVANR-FULL STACK DEVELOPER -10-7-26.pdf", resume);
+                String filename = profile.getName().replace(" ", "-") + "-Resume.pdf";
+                helper.addAttachment(filename, resume);
             }
 
             mailSender.send(msg);

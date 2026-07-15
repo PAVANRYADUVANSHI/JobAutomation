@@ -40,8 +40,12 @@ const appSlice = createSlice({
     b.addCase(updateStatus.fulfilled, (s, a) => {
       const idx = s.all.findIndex(x => x.id === a.payload.id);
       if (idx >= 0) s.all[idx] = a.payload;
-      s.queue = s.queue.filter(x => x.id !== a.payload.id);
+      // Only remove from queue if status is no longer SHORTLISTED
+      if (a.payload.status !== 'SHORTLISTED') {
+        s.queue = s.queue.filter(x => x.id !== a.payload.id);
+      }
     });
+    b.addCase(updateStatus.rejected, (s) => { s.loading = false; });
     b.addCase(triggerShortlist.fulfilled, (s, a) => { s.queue = [...s.queue, ...a.payload]; });
   },
 });

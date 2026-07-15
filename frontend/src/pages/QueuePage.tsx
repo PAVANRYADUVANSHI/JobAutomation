@@ -25,20 +25,54 @@ export default function QueuePage() {
 
   const [coverLetters, setCoverLetters] = useState<Record<number, string>>({});
   const [regenerating, setRegenerating] = useState<number | null>(null);
+  const [actionMsg, setActionMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null);
+  const [actioning, setActioning] = useState<number | null>(null);
+
+  const flash = (id: number, msg: string, ok: boolean) => {
+    setActionMsg({ id, msg, ok });
+    setTimeout(() => setActionMsg(null), 4000);
+  };
 
   const regenerateCoverLetter = async (app: Application) => {
     setRegenerating(app.id);
-    const res = await import('../services/api').then(m => m.default.post(`/api/applications/${app.id}/regenerate-cover-letter`));
-    setCoverLetters(prev => ({ ...prev, [app.id]: res.data.coverLetter }));
+    try {
+      const res = await import('../services/api').then(m => m.default.post(`/api/applications/${app.id}/regenerate-cover-letter`));
+      setCoverLetters(prev => ({ ...prev, [app.id]: res.data.coverLetter }));
+    } catch { flash(app.id, 'Failed to regenerate cover letter', false); }
     setRegenerating(null);
   };
 
   const getCoverLetter = (app: Application) => coverLetters[app.id] ?? app.coverLetter;
-  const approve = (app: Application) => dispatch(updateStatus({ id: app.id, status: 'APPLIED' }));
-  const reject = (app: Application) => dispatch(updateStatus({ id: app.id, status: 'REJECTED' }));
+
+  const approve = async (app: Application) => {
+    setActioning(app.id);
+    const res = await dispatch(updateStatus({ id: app.id, status: 'APPLIED' }));
+    if (updateStatus.rejected.match(res)) flash(app.id, 'Failed to mark as applied', false);
+    setActioning(null);
+  };
+
+  const reject = async (app: Application) => {
+    setActioning(app.id);
+    const res = await dispatch(updateStatus({ id: app.id, status: 'REJECTED' }));
+    if (updateStatus.rejected.match(res)) flash(app.id, 'Failed to skip', false);
+    setActioning(null);
+  };
+
   const emailApply = async (app: Application) => {
-    await import('../services/api').then(m => m.default.post(`/api/applications/${app.id}/email-apply`));
-    dispatch(updateStatus({ id: app.id, status: 'APPLIED' }));
+    setActioning(app.id);
+    try {
+      const api = await import('../services/api').then(m => m.default);
+      const res = await api.post(`/api/applications/${app.id}/email-apply`);
+      if (res.data.sent) {
+        dispatch(updateStatus({ id: app.id, status: 'APPLIED' }));
+        flash(app.id, '✓ Email sent to HR', true);
+      } else {
+        flash(app.id, res.data.message || 'No HR email configured for this company', false);
+      }
+    } catch (e: any) {
+      flash(app.id, e?.response?.data?.message || 'Email failed — check mail config', false);
+    }
+    setActioning(null);
   };
 
   return (
@@ -69,6 +103,12 @@ export default function QueuePage() {
 
       {loading && <p className="text-gray-400">Loading...</p>}
 
+      {actionMsg && (
+        <p className={`text-sm px-4 py-2 rounded-lg ${actionMsg.ok ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
+          {actionMsg.msg}
+        </p>
+      )}
+
       {filtered.length === 0 && !loading && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
           <p className="text-gray-400">Queue is empty. Run the pipeline to fetch and shortlist jobs.</p>
@@ -98,19 +138,22 @@ export default function QueuePage() {
               <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                 <button
                   onClick={() => emailApply(app)}
-                  className="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none"
+                  disabled={actioning === app.id}
+                  className="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none disabled:opacity-50"
                 >
-                  ✉ Email
+                  {actioning === app.id ? '...' : '✉ Email'}
                 </button>
                 <button
                   onClick={() => approve(app)}
-                  className="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none"
+                  disabled={actioning === app.id}
+                  className="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none disabled:opacity-50"
                 >
                   ✓ Apply
                 </button>
                 <button
                   onClick={() => reject(app)}
-                  className="bg-red-900 hover:bg-red-800 text-red-300 text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none"
+                  disabled={actioning === app.id}
+                  className="bg-red-900 hover:bg-red-800 text-red-300 text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none disabled:opacity-50"
                 >
                   ✕ Skip
                 </button>
