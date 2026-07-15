@@ -13,7 +13,7 @@ public interface JobListingRepository extends JpaRepository<JobListing, Long> {
     Page<JobListing> findByStatus(String status, Pageable pageable);
     List<JobListing> findByStatusAndTrack(String status, String track);
 
-    @Query("SELECT j FROM JobListing j WHERE j.status = 'SHORTLISTED' ORDER BY GREATEST(j.javaMatchScore, j.genaiMatchScore) DESC")
+    @Query(value = "SELECT * FROM job_listing WHERE status = 'SHORTLISTED' ORDER BY GREATEST(java_match_score, genai_match_score) DESC LIMIT :#{#pageable.pageSize}", nativeQuery = true)
     List<JobListing> findShortlistedOrderByScore(Pageable pageable);
 
     long countByTrack(String track);

@@ -25,8 +25,8 @@ export default function LoginPage() {
         <div style={{display:'flex', alignItems:'center', gap:12, marginBottom:24}}>
           <div style={{width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:'1rem', color:'#fff', letterSpacing:-1}}>JA</div>
           <div>
-            <h1 style={{fontSize:'1.4rem', fontWeight:900, background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', margin:0}}>JOBAUTO</h1>
-            <p style={{color:'#6b7280', fontSize:'0.75rem', margin:0}}>Pavan R · Fresher Full-Stack + GenAI</p>
+            <h1 style={{fontSize:'1.4rem', fontWeight:900, background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', margin:0}}>PAVAN R</h1>
+            <p style={{color:'#6b7280', fontSize:'0.75rem', margin:0}}>Job Automation · Fresher Full-Stack + GenAI</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">

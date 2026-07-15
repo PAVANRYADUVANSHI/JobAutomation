@@ -60,7 +60,7 @@ export default function OnboardingPage() {
           style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)' }}>JA</div>
         <div>
           <p className="font-black text-lg leading-none"
-            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>JOBAUTO</p>
+            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>PAVAN R</p>
           <p className="text-gray-500 text-[10px] tracking-widest uppercase">Get Started</p>
         </div>
       </div>

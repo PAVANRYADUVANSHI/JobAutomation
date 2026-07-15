@@ -23,6 +23,7 @@ public class ResumeMatcherService {
     @Value("${app.review.mode:MANUAL}")
     private String reviewMode;
 
+    // Matches "3 years experience", "3+ years", "3-5 years experience" — but NOT "0-1 years" or "0-2 years"
     private static final java.util.regex.Pattern EXPERIENCE_PATTERN =
         java.util.regex.Pattern.compile(
             "(\\d+)\\s*(?:\\+|\\-\\s*\\d+)?\\s*(?:years?|yrs?)\\s*(?:of\\s*)?(?:professional\\s*|industry\\s*|software\\s*|work\\s*)?(?:experience|exp)",
@@ -33,11 +34,14 @@ public class ResumeMatcherService {
         if (description == null && experienceRequired == null) return false;
         String combined = ((description != null ? description : "") + " " +
                           (experienceRequired != null ? experienceRequired : "")).toLowerCase();
+        // Never exclude if it explicitly says 0-1 or 0-2 years (fresher range)
+        if (combined.contains("0-1 year") || combined.contains("0-2 year") ||
+            combined.contains("0 to 1") || combined.contains("0 to 2")) return false;
         var matcher = EXPERIENCE_PATTERN.matcher(combined);
         while (matcher.find()) {
             try {
                 int years = Integer.parseInt(matcher.group(1));
-                if (years >= 1) return true;
+                if (years >= 3) return true; // only exclude if 3+ years required
             } catch (NumberFormatException ignored) {}
         }
         return false;
@@ -80,10 +84,9 @@ public class ResumeMatcherService {
         if (relevantWeight == 0) return 0.0;
         double rawScore = matchedWeight / relevantWeight;
 
-        // Calibrate: raw 0.3 → 0.60, raw 0.6 → 0.75, raw 1.0 → 0.92
-        // Linear scale: floor=0.60, ceiling=0.92, applied when rawScore >= 0.25
-        if (rawScore < 0.25) return rawScore; // below threshold, return as-is (will be filtered out)
-        double calibrated = 0.60 + (rawScore - 0.25) * ((0.92 - 0.60) / (1.0 - 0.25));
+        // Calibrate: raw 0.1 → 0.50, raw 0.4 → 0.70, raw 1.0 → 0.92
+        if (rawScore < 0.05) return rawScore;
+        double calibrated = 0.50 + (rawScore - 0.05) * ((0.92 - 0.50) / (1.0 - 0.05));
         return Math.min(calibrated, 0.92);
     }
 

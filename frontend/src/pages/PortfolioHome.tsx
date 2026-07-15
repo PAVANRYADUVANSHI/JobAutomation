@@ -197,7 +197,7 @@ export default function PortfolioHome() {
       {/* FOOTER */}
       <footer style={{ textAlign: 'center', padding: '32px 5%', borderTop: '1px solid rgba(99,102,241,0.15)', color: '#90caf9', fontSize: '0.85rem' }}>
         <p>Built by <span style={{ background: 'linear-gradient(135deg,#6366f1,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontWeight: 700 }}>PAVAN R YADAV</span> · Java Full Stack + GenAI Developer</p>
-        <p style={{ marginTop: 6, opacity: 0.5, fontSize: '0.75rem' }}>Powered by JOBAUTO Platform</p>
+        <p style={{ marginTop: 6, opacity: 0.5, fontSize: '0.75rem' }}>Pavan R · Job Automation Platform</p>
       </footer>
 
       <style>{`

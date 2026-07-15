@@ -84,8 +84,8 @@ export default function TopNav() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-            }}>JOBAUTO</span>
-            <span className="text-gray-500 text-[9px] tracking-widest uppercase font-medium">by Pavan R</span>
+            }}>PAVAN R</span>
+            <span className="text-gray-500 text-[9px] tracking-widest uppercase font-medium">Job Automation</span>
           </div>
         </NavLink>
 
@@ -126,7 +126,7 @@ export default function TopNav() {
           </Dropdown>
 
           {/* JOBAUTO Dropdown */}
-          <Dropdown label={<span className={isJobAutoActive ? 'text-cyan-400' : ''}>⚡ JOBAUTO</span>}>
+          <Dropdown label={<span className={isJobAutoActive ? 'text-cyan-400' : ''}>⚡ JobAuto</span>}>
             <div className="p-1">
               <div className="px-3 py-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Job Automation</div>
               {JOBAUTO_LINKS.map(({ to, label, exact }) => (
@@ -193,7 +193,7 @@ export default function TopNav() {
               {p.name}
             </a>
           ))}
-          <div className="px-4 py-1 text-[10px] text-gray-500 uppercase tracking-widest mt-2">JOBAUTO</div>
+          <div className="px-4 py-1 text-[10px] text-gray-500 uppercase tracking-widest mt-2">JobAuto</div>
           {JOBAUTO_LINKS.map(({ to, label, exact }) => (
             <NavLink key={to} to={to} end={exact} className="px-4 py-2.5 text-gray-300 rounded-xl hover:bg-gray-800 text-sm" onClick={() => setMobileOpen(false)}>
               {label}

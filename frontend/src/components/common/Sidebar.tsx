@@ -24,8 +24,8 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">
       <div className="p-5 border-b border-gray-800">
-        <p className="text-white font-bold text-sm">Job Automation</p>
-        <p className="text-gray-500 text-xs">Pavan R · Fresher</p>
+        <p className="text-white font-bold text-sm">PAVAN R</p>
+        <p className="text-gray-500 text-xs">Job Automation · Fresher</p>
       </div>
       <nav className="flex-1 p-3 space-y-1">
         {NAV.map(({ to, label, exact }) => (

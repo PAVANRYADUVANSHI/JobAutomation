@@ -340,7 +340,7 @@ public class JobAggregatorService {
             Map<String, Double> scores = matcherService.scoreJob(desc, title);
             double javaScore = scores.getOrDefault("javaFullStack", 0.0);
             double genaiScore = scores.getOrDefault("genAILeaning", 0.0);
-            if (Math.max(javaScore, genaiScore) < 0.15) return 0;
+            if (Math.max(javaScore, genaiScore) < 0.05) return 0; // only drop near-zero matches
 
             JobListing job = JobListing.builder()
                 .title(title).company(company).location(location)
@@ -400,28 +400,21 @@ public class JobAggregatorService {
     private boolean isFresherRole(String title, String desc) {
         String t = title.toLowerCase();
 
-        // Block any title with a senior/non-fresher pattern — definitive
+        // Block senior/non-fresher titles first
         if (BLOCKED_TITLE_PATTERNS.stream().anyMatch(t::contains)) return false;
 
-        // Title must match an allowed role first
+        // Title must match an allowed role
         if (ALLOWED_TITLE_KEYWORDS.stream().noneMatch(t::contains)) return false;
 
         // Internship in title — always accept
         if (t.contains("intern") || t.contains("internship")) return true;
 
-        // Fresher signal in title — always accept
+        // Explicit fresher signal in title — always accept
         if (FRESHER_TITLE_SIGNALS.stream().anyMatch(t::contains)) return true;
 
-        // No fresher signal in title — check description
-        // Accept if: no experience required AND description has a fresher/entry signal
-        if (matcherService.shouldExclude(desc, null)) return false;
-
-        String d = desc != null ? desc.toLowerCase() : "";
-        return d.contains("fresher") || d.contains("entry level") || d.contains("entry-level") ||
-               d.contains("0-1") || d.contains("0 to 1") || d.contains("junior") ||
-               d.contains("trainee") || d.contains("new grad") || d.contains("graduate") ||
-               d.contains("no prior experience") || d.contains("no experience required") ||
-               d.contains("recent graduate") || d.contains("fresh graduate");
+        // No fresher signal in title — accept if description doesn’t require 3+ years
+        // (shouldExclude already handles the 3+ year block)
+        return !matcherService.shouldExclude(desc, null);
     }
 
     private boolean isRelevantRole(String title, String desc) {

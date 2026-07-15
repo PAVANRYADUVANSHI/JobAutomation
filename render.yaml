@@ -11,6 +11,10 @@ services:
         fromDatabase:
           name: jobauto-db
           property: connectionString
+      - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        value: org.postgresql.Driver
+      - key: SPRING_JPA_DATABASE_PLATFORM
+        value: org.hibernate.dialect.PostgreSQLDialect
       - key: DB_USER
         fromDatabase:
           name: jobauto-db
@@ -24,12 +28,16 @@ services:
       - key: REVIEW_MODE
         value: MANUAL
       - key: CORS_ORIGINS
-        value: https://jobauto.netlify.app
+        value: https://jobauto-pavan.netlify.app
       - key: MAIL_HOST
         value: smtp.gmail.com
       - key: MAIL_USER
         value: pavanryadavkumsi25@gmail.com
       - key: MAIL_PASS
+        value: ""
+      - key: SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH
+        value: "false"
+      - key: SPRING_AUTOCONFIGURE_EXCLUDE
         value: ""
       - key: ADZUNA_APP_ID
         value: "062831f8"

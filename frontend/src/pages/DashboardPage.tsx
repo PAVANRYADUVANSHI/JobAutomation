@@ -40,7 +40,7 @@ export default function DashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>JOBAUTO Dashboard</h1>
+          <h1 className="text-xl font-bold" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>PAVAN R — Dashboard</h1>
           <p className="text-gray-400 text-xs">Pavan R · Fresher Full-Stack + GenAI · 50 jobs/day</p>
         </div>
         <button

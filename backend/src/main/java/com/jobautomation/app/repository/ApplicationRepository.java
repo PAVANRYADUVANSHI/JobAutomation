@@ -23,6 +23,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query("SELECT a FROM Application a WHERE a.submittedAt >= :from ORDER BY a.submittedAt DESC")
     List<Application> findSubmittedSince(LocalDateTime from);
 
-    @Query("SELECT DATE(a.submittedAt) as day, COUNT(a) as cnt FROM Application a WHERE a.submittedAt IS NOT NULL GROUP BY DATE(a.submittedAt) ORDER BY day DESC")
+    @Query(value = "SELECT CAST(submitted_at AS DATE) as day, COUNT(*) as cnt FROM application WHERE submitted_at IS NOT NULL GROUP BY CAST(submitted_at AS DATE) ORDER BY day DESC", nativeQuery = true)
     List<Object[]> dailyApplicationCounts();
 }

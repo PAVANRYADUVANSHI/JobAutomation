@@ -1,7 +1,7 @@
--- V1: Initial schema
+-- V1: Initial schema (PostgreSQL)
 
 CREATE TABLE IF NOT EXISTS candidate_profile (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL,
     phone VARCHAR(20),
@@ -16,44 +16,44 @@ CREATE TABLE IF NOT EXISTS candidate_profile (
 );
 
 CREATE TABLE IF NOT EXISTS education (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     candidate_id BIGINT NOT NULL,
     degree VARCHAR(255),
     certification VARCHAR(255),
     institution VARCHAR(255),
     years VARCHAR(50),
     percentage VARCHAR(20),
-    coursework JSON,
+    coursework JSONB,
     FOREIGN KEY (candidate_id) REFERENCES candidate_profile(id)
 );
 
 CREATE TABLE IF NOT EXISTS resume_version (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     candidate_id BIGINT NOT NULL,
     version_key VARCHAR(50) NOT NULL,
-    target_roles JSON,
+    target_roles JSONB,
     summary TEXT,
-    core_skills JSON,
-    keyword_weights JSON,
+    core_skills JSONB,
+    keyword_weights JSONB,
     resume_file_path VARCHAR(255),
     FOREIGN KEY (candidate_id) REFERENCES candidate_profile(id)
 );
 
 CREATE TABLE IF NOT EXISTS resume_project (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     resume_version_id BIGINT NOT NULL,
     name VARCHAR(255),
     type VARCHAR(100),
     dates VARCHAR(100),
     github_url VARCHAR(255),
-    stack JSON,
+    stack JSONB,
     highlight TEXT,
     cover_letter_pitch TEXT,
     FOREIGN KEY (resume_version_id) REFERENCES resume_version(id)
 );
 
 CREATE TABLE IF NOT EXISTS target_company (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(50),
     ats_type VARCHAR(50),
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS target_company (
 );
 
 CREATE TABLE IF NOT EXISTS job_listing (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     external_id VARCHAR(255),
     source VARCHAR(100),
     track VARCHAR(50),
@@ -79,23 +79,23 @@ CREATE TABLE IF NOT EXISTS job_listing (
     is_remote BOOLEAN DEFAULT FALSE,
     is_manual_watchlist BOOLEAN DEFAULT FALSE,
     dedup_hash VARCHAR(64),
-    java_match_score DOUBLE DEFAULT 0,
-    genai_match_score DOUBLE DEFAULT 0,
+    java_match_score DOUBLE PRECISION DEFAULT 0,
+    genai_match_score DOUBLE PRECISION DEFAULT 0,
     selected_resume_version VARCHAR(50),
     status VARCHAR(50) DEFAULT 'NEW',
     fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_dedup (dedup_hash)
+    CONSTRAINT uq_dedup UNIQUE (dedup_hash)
 );
 
 CREATE TABLE IF NOT EXISTS application (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     job_listing_id BIGINT NOT NULL,
     candidate_id BIGINT NOT NULL,
     resume_version VARCHAR(50),
     cover_letter TEXT,
     status VARCHAR(50) DEFAULT 'SHORTLISTED',
     track VARCHAR(50),
-    match_score DOUBLE,
+    match_score DOUBLE PRECISION,
     submitted_at TIMESTAMP NULL,
     response_at TIMESTAMP NULL,
     interview_at TIMESTAMP NULL,
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS application (
 );
 
 CREATE TABLE IF NOT EXISTS app_user (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'ROLE_USER',
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS app_user (
 );
 
 CREATE TABLE IF NOT EXISTS scheduler_log (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     run_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     jobs_fetched INT DEFAULT 0,
     jobs_matched INT DEFAULT 0,
