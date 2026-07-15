@@ -27,7 +27,7 @@ public class SchedulerController {
         }
         running.set(true);
         lastResult = null;
-        Thread.ofVirtual().start(() -> {
+        new Thread(() -> {
             try {
                 int fetched = aggregatorService.fetchAll();
                 List<com.jobautomation.app.model.Application> apps = applicationService.shortlistToday();
@@ -44,7 +44,7 @@ public class SchedulerController {
             } finally {
                 running.set(false);
             }
-        });
+        }).start();
         return ResponseEntity.ok(Map.of("status", "running", "message", "Pipeline started"));
     }
 

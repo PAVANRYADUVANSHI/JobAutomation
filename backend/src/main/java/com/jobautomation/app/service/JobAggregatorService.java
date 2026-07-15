@@ -21,17 +21,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Pulls job listings from:
- * - Adzuna API (official)
- * - RemoteOK API (official)
- * - Greenhouse public job board API (per company slug)
- * - Lever public postings API (per company slug)
- * - Ashby public job board API (per company slug)
- * - Manual watchlist entries for companies with no API
- *
- * NO scraping. All sources are official public APIs or RSS feeds.
- */
 @Service @RequiredArgsConstructor @Slf4j
 public class JobAggregatorService {
 
@@ -76,7 +65,6 @@ public class JobAggregatorService {
         "AI Full Stack Developer Fresher"
     );
 
-    // Exact allowed title patterns — must match at least one
     private static final List<String> ALLOWED_TITLE_KEYWORDS = List.of(
         "java full stack", "java fullstack", "full stack developer", "fullstack developer",
         "full stack engineer", "fullstack engineer",
@@ -92,7 +80,6 @@ public class JobAggregatorService {
         "intern", "internship"
     );
 
-    // Title must contain one of these to be considered fresher/entry-level
     private static final List<String> FRESHER_TITLE_SIGNALS = List.of(
         "fresher", "freshers", "entry level", "entry-level",
         "junior", "trainee", "associate", "new grad", "graduate",
@@ -112,6 +99,20 @@ public class JobAggregatorService {
         "people team", "hr ", "human resources", "professional services",
         "marketing", "finance intern", "legal ", "operations intern",
         "recruiting", "talent "
+    );
+
+    // Blocks L3, L4, Engineer 3, Engineer III, SWE3, SDE3 etc.
+    private static final java.util.regex.Pattern LEVEL_PATTERN =
+        java.util.regex.Pattern.compile(
+            "\\b(l[3-9]|engineer\\s+[3-9]|engineer\\s+(iii|iv|v|vi)|swe\\s*[3-9]|sde\\s*[3-9]|level\\s+[3-9])\\b",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+
+    private static final List<String> BLOCKED_LOCATIONS = List.of(
+        "united states", "us only", "canada", "uk only", "united kingdom",
+        "australia", "germany", "france", "netherlands", "singapore",
+        "new york", "san francisco", "seattle", "london", "toronto",
+        "dublin", "amsterdam", "berlin", "sydney", "emea"
     );
 
     public int fetchAll() {
@@ -239,6 +240,7 @@ public class JobAggregatorService {
                 if (!isRelevantRole(title, desc)) continue;
                 if (!isFresherRole(title, desc)) continue;
                 if (matcherService.shouldExclude(desc, null)) continue;
+                if (!isLocationAllowed(location)) continue;
 
                 count += saveJob(title, company.getName(), location, desc, applyUrl,
                     "GREENHOUSE", detectTrackFromText(title + " " + desc), false);
@@ -267,6 +269,7 @@ public class JobAggregatorService {
                 if (!isRelevantRole(title, desc)) continue;
                 if (!isFresherRole(title, desc)) continue;
                 if (matcherService.shouldExclude(desc, null)) continue;
+                if (!isLocationAllowed(location)) continue;
 
                 count += saveJob(title, company.getName(), location, desc, applyUrl,
                     "LEVER", detectTrackFromText(title + " " + desc), false);
@@ -295,6 +298,7 @@ public class JobAggregatorService {
                 if (!isRelevantRole(title, desc)) continue;
                 if (!isFresherRole(title, desc)) continue;
                 if (matcherService.shouldExclude(desc, null)) continue;
+                if (!isLocationAllowed(location)) continue;
 
                 count += saveJob(title, company.getName(), location, desc, applyUrl,
                     "ASHBY", detectTrackFromText(title + " " + desc), false);
@@ -340,7 +344,7 @@ public class JobAggregatorService {
             Map<String, Double> scores = matcherService.scoreJob(desc, title);
             double javaScore = scores.getOrDefault("javaFullStack", 0.0);
             double genaiScore = scores.getOrDefault("genAILeaning", 0.0);
-            if (Math.max(javaScore, genaiScore) < 0.05) return 0; // only drop near-zero matches
+            if (Math.max(javaScore, genaiScore) < 0.05) return 0;
 
             JobListing job = JobListing.builder()
                 .title(title).company(company).location(location)
@@ -399,40 +403,36 @@ public class JobAggregatorService {
 
     private boolean isFresherRole(String title, String desc) {
         String t = title.toLowerCase();
-
-        // Block senior/non-fresher titles first
         if (BLOCKED_TITLE_PATTERNS.stream().anyMatch(t::contains)) return false;
-
-        // Title must match an allowed role
+        if (LEVEL_PATTERN.matcher(t).find()) return false;
         if (ALLOWED_TITLE_KEYWORDS.stream().noneMatch(t::contains)) return false;
-
-        // Internship in title — always accept
         if (t.contains("intern") || t.contains("internship")) return true;
-
-        // Explicit fresher signal in title — always accept
         if (FRESHER_TITLE_SIGNALS.stream().anyMatch(t::contains)) return true;
-
-        // No fresher signal in title — accept if description doesn’t require 3+ years
-        // (shouldExclude already handles the 3+ year block)
         return !matcherService.shouldExclude(desc, null);
+    }
+
+    private boolean isLocationAllowed(String location) {
+        if (location == null || location.isBlank()) return true;
+        String l = location.toLowerCase();
+        if (l.contains("bangalore") || l.contains("bengaluru") || l.contains("india") ||
+            l.contains("remote") || l.contains("n/a")) return true;
+        return BLOCKED_LOCATIONS.stream().noneMatch(l::contains);
     }
 
     private boolean isRelevantRole(String title, String desc) {
         String t = title.toLowerCase();
-        // Block first, then check allowed keywords
         if (BLOCKED_TITLE_PATTERNS.stream().anyMatch(t::contains)) return false;
+        if (LEVEL_PATTERN.matcher(t).find()) return false;
         return ALLOWED_TITLE_KEYWORDS.stream().anyMatch(t::contains);
     }
 
     private String stripHtml(String html) {
         if (html == null) return null;
-        // Decode double-encoded entities first
         String s = html.replace("&amp;lt;", "<").replace("&amp;gt;", ">")
                        .replace("&amp;quot;", "\"").replace("&amp;amp;", "&")
                        .replace("&lt;", "<").replace("&gt;", ">")
                        .replace("&quot;", "\"").replace("&amp;", "&")
                        .replace("&#39;", "'").replace("&nbsp;", " ");
-        // Strip HTML tags
         return s.replaceAll("<[^>]+>", " ").replaceAll("\\s{2,}", " ").trim();
     }
 

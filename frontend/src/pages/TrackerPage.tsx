@@ -79,7 +79,9 @@ export default function TrackerPage() {
                     {app.track === 'GENAI' ? 'GenAI' : 'Java FS'}
                   </span>
                 </td>
-                <td className="py-3 px-2 text-gray-400 text-xs">{app.resumeVersion}</td>
+                <td className="py-3 px-2 text-gray-400 text-xs">
+                  {app.resumeVersion === 'genAILeaning' ? 'GenAI Resume' : 'Java FS Resume'}
+                </td>
                 <td className="py-3 px-2 text-green-400 font-mono">{Math.round(app.matchScore * 100)}%</td>
                 <td className="py-3 px-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[app.status] || 'bg-gray-700 text-gray-300'}`}>

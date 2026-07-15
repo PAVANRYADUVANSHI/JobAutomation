@@ -128,7 +128,7 @@ export default function QueuePage() {
                     {app.track === 'GENAI' ? 'GenAI' : 'Java FS'}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[app.status] || 'bg-gray-700 text-gray-300'}`}>
-                    {app.status}
+                    {app.status.charAt(0) + app.status.slice(1).toLowerCase()}
                   </span>
                   <span className="text-green-400 text-xs font-mono ml-auto">{Math.round(app.matchScore * 100)}%</span>
                 </div>

@@ -13,9 +13,13 @@ export const fetchAll = createAsyncThunk('applications/fetchAll', async (status?
 });
 
 export const updateStatus = createAsyncThunk('applications/updateStatus',
-  async ({ id, status, notes }: { id: number; status: string; notes?: string }) => {
-    const res = await applicationService.updateStatus(id, status, notes);
-    return res.data;
+  async ({ id, status, notes }: { id: number; status: string; notes?: string }, { rejectWithValue }) => {
+    try {
+      const res = await applicationService.updateStatus(id, status, notes);
+      return res.data;
+    } catch (e: any) {
+      return rejectWithValue(e?.response?.data?.message || 'Failed to update status');
+    }
   });
 
 export const triggerShortlist = createAsyncThunk('applications/shortlist', async () => {
