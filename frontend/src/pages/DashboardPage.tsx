@@ -38,21 +38,17 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-2xl font-bold" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>JOBAUTO Dashboard</h1>
-              <p className="text-gray-400 text-sm">Pavan R · Fresher Full-Stack + GenAI · 50 jobs/day</p>
-            </div>
-          </div>
+          <h1 className="text-xl font-bold" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>JOBAUTO Dashboard</h1>
+          <p className="text-gray-400 text-xs">Pavan R · Fresher Full-Stack + GenAI · 50 jobs/day</p>
         </div>
         <button
           onClick={runPipeline}
           disabled={pipelineRunning}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-60"
+          className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-60 w-full sm:w-auto"
         >
-          {pipelineRunning ? '⟳ Running... (check queue in ~2 min)' : '▶ Run Pipeline Now'}
+          {pipelineRunning ? '⟳ Running... (~2 min)' : '▶ Run Pipeline Now'}
         </button>
       </div>
 

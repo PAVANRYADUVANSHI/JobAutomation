@@ -43,30 +43,24 @@ export default function QueuePage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Review Queue</h1>
-          <p className="text-gray-400 text-sm">{queue.length} jobs shortlisted today</p>
+          <h1 className="text-xl font-bold text-white">Review Queue</h1>
+          <p className="text-gray-400 text-xs">{queue.length} jobs shortlisted today</p>
         </div>
         <div className="flex gap-2">
           <select
             value={trackFilter}
             onChange={e => setTrackFilter(e.target.value)}
-            className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2"
+            className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 flex-1 sm:flex-none"
           >
             <option value="ALL">All Tracks</option>
-            <option value="JAVA_FULLSTACK">Java Full-Stack</option>
+            <option value="JAVA_FULLSTACK">Java FS</option>
             <option value="GENAI">GenAI</option>
           </select>
           <button
-            onClick={() => import('../services/api').then(m => m.default.post('/api/applications/email-apply-all'))}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-          >
-            ✉ Email Apply All
-          </button>
-          <button
             onClick={() => dispatch(triggerShortlist())}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex-1 sm:flex-none"
           >
             Re-Shortlist
           </button>
@@ -85,7 +79,7 @@ export default function QueuePage() {
         {filtered.map(app => (
           <div key={app.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <div
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-800 transition"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer hover:bg-gray-800 transition gap-3"
               onClick={() => setExpanded(expanded === app.id ? null : app.id)}
             >
               <div className="flex-1 min-w-0">
@@ -93,39 +87,33 @@ export default function QueuePage() {
                   <span className={`text-xs px-2 py-0.5 rounded-full ${app.track === 'GENAI' ? 'bg-purple-900 text-purple-300' : 'bg-blue-900 text-blue-300'}`}>
                     {app.track === 'GENAI' ? 'GenAI' : 'Java FS'}
                   </span>
-                  <span className="text-xs text-gray-500">{app.resumeVersion}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[app.status] || 'bg-gray-700 text-gray-300'}`}>
                     {app.status}
                   </span>
+                  <span className="text-green-400 text-xs font-mono ml-auto">{Math.round(app.matchScore * 100)}%</span>
                 </div>
                 <p className="text-white font-medium truncate">{app.jobListing.title}</p>
                 <p className="text-gray-400 text-sm">{app.jobListing.company} · {app.jobListing.location}</p>
               </div>
-              <div className="flex items-center gap-3 ml-4">
-                <div className="text-right">
-                  <p className="text-green-400 font-mono font-bold">{Math.round(app.matchScore * 100)}%</p>
-                  <p className="text-gray-500 text-xs">match</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={e => { e.stopPropagation(); emailApply(app); }}
-                    className="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg transition"
-                  >
-                    ✉ Email Apply
-                  </button>
-                  <button
-                    onClick={e => { e.stopPropagation(); approve(app); }}
-                    className="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg transition"
-                  >
-                    ✓ Apply
-                  </button>
-                  <button
-                    onClick={e => { e.stopPropagation(); reject(app); }}
-                    className="bg-red-900 hover:bg-red-800 text-red-300 text-xs px-3 py-1.5 rounded-lg transition"
-                  >
-                    ✕ Skip
-                  </button>
-                </div>
+              <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => emailApply(app)}
+                  className="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none"
+                >
+                  ✉ Email
+                </button>
+                <button
+                  onClick={() => approve(app)}
+                  className="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none"
+                >
+                  ✓ Apply
+                </button>
+                <button
+                  onClick={() => reject(app)}
+                  className="bg-red-900 hover:bg-red-800 text-red-300 text-xs px-3 py-2 rounded-lg transition flex-1 sm:flex-none"
+                >
+                  ✕ Skip
+                </button>
               </div>
             </div>
 

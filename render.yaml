@@ -32,9 +32,9 @@ services:
       - key: MAIL_PASS
         value: ""
       - key: ADZUNA_APP_ID
-        value: ""
+        value: "062831f8"
       - key: ADZUNA_APP_KEY
-        value: ""
+        value: "7621a31d933c432a96eb0cf627f9b7ae"
 
 databases:
   - name: jobauto-db

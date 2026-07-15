@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { Provider } from 'react-redux';
 import { store } from './store';
 import TopNav from './components/common/TopNav';
+import BottomNav from './components/common/BottomNav';
+import InstallBanner from './components/common/InstallBanner';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import QueuePage from './pages/QueuePage';
@@ -11,6 +13,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 import WatchlistPage from './pages/WatchlistPage';
 import PortfolioHome from './pages/PortfolioHome';
+import OnboardingPage from './pages/OnboardingPage';
 
 function ProtectedLayout() {
   const token = localStorage.getItem('token');
@@ -18,9 +21,11 @@ function ProtectedLayout() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <TopNav />
-      <main className="pt-14">
+      <main className="pt-14 pb-16 md:pb-0">
         <Outlet />
       </main>
+      <BottomNav />
+      <InstallBanner />
     </div>
   );
 }
@@ -31,6 +36,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<PortfolioHome />} />
             <Route path="/dashboard" element={<DashboardPage />} />

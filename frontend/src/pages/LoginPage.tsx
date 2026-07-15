@@ -13,7 +13,10 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await dispatch(login(form));
-    if (login.fulfilled.match(result)) navigate('/');
+    if (login.fulfilled.match(result)) {
+      const seen = localStorage.getItem('onboarding_done');
+      navigate(seen ? '/' : '/onboarding');
+    }
   };
 
   return (
