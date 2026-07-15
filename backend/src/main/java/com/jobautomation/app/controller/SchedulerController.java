@@ -19,14 +19,14 @@ public class SchedulerController {
     @PostMapping("/run")
     @Operation(summary = "Manually trigger the full daily pipeline (fetch → match → shortlist)")
     public ResponseEntity<Map<String, Object>> runPipeline() {
-        new Thread(() -> {
-            int fetched = aggregatorService.fetchAll();
-            applicationService.shortlistToday();
-        }).start();
+        int fetched = aggregatorService.fetchAll();
+        List<com.jobautomation.app.model.Application> apps = applicationService.shortlistToday();
         return ResponseEntity.ok(Map.of(
-            "fetched", -1,
-            "shortlisted", -1,
-            "message", "Pipeline started — check queue in ~2 minutes"
+            "fetched", fetched,
+            "shortlisted", apps.size(),
+            "message", fetched == 0
+                ? "No new jobs found. APIs may be rate-limited or no fresher roles matched today."
+                : "Pipeline complete — " + apps.size() + " jobs shortlisted from " + fetched + " fetched"
         ));
     }
 

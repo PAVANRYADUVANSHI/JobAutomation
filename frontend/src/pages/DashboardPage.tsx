@@ -21,17 +21,23 @@ export default function DashboardPage() {
   }, [dispatch]);
 
   const [pipelineRunning, setPipelineRunning] = React.useState(false);
+  const [pipelineResult, setPipelineResult] = React.useState<string | null>(null);
 
   const runPipeline = async () => {
     setPipelineRunning(true);
-    await schedulerService.run();
-    // pipeline runs async on backend (~2 min), poll every 15s for 3 min
-    let polls = 0;
-    const interval = setInterval(() => {
+    setPipelineResult(null);
+    try {
+      const res = await schedulerService.run();
+      const { fetched, shortlisted, message } = res.data;
+      setPipelineResult(`✓ ${message}`);
       dispatch(fetchAnalytics());
       dispatch(fetchQueue());
-      if (++polls >= 12) { clearInterval(interval); setPipelineRunning(false); }
-    }, 15000);
+      dispatch(fetchSchedulerLogs());
+    } catch (e: any) {
+      setPipelineResult('✗ Pipeline failed — check backend logs');
+    } finally {
+      setPipelineRunning(false);
+    }
   };
 
   const d = data ?? { applied: 0, responses: 0, interviews: 0, offers: 0, shortlisted: 0, rejected: 0, javaTrackTotal: 0, genaiTrackTotal: 0, javaTrackApplied: 0, genaiTrackApplied: 0, dailyCounts: {}, totalApplications: 0 };
@@ -48,10 +54,15 @@ export default function DashboardPage() {
           disabled={pipelineRunning}
           className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-60 w-full sm:w-auto"
         >
-          {pipelineRunning ? '⟳ Running... (~2 min)' : '▶ Run Pipeline Now'}
+          {pipelineRunning ? '⟳ Fetching jobs...' : '▶ Run Pipeline Now'}
         </button>
       </div>
 
+      {pipelineResult && (
+        <p className={`text-sm px-4 py-2 rounded-lg ${pipelineResult.startsWith('✓') ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
+          {pipelineResult}
+        </p>
+      )}
       {loading && <p className="text-indigo-400 text-xs">⟳ Syncing with backend...</p>}
 
       {/* Stats Row */}
