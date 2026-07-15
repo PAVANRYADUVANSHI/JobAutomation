@@ -24,17 +24,17 @@ public class DataSourceConfig {
         );
 
         String jdbcUrl = toJdbcUrl(raw);
-        log.info("DataSource connecting to: {}", jdbcUrl.replaceAll(":[^/@:]+@", ":***@"));
+        log.info("DataSource URL: {}", jdbcUrl.replaceAll(":[^/@:]+@", ":***@"));
 
         HikariConfig cfg = new HikariConfig();
         cfg.setJdbcUrl(jdbcUrl);
+        cfg.setDriverClassName("org.postgresql.Driver");
         cfg.setMaximumPoolSize(3);
         cfg.setMinimumIdle(1);
         cfg.setConnectionTimeout(30000);
         cfg.setIdleTimeout(600000);
         cfg.setMaxLifetime(1800000);
 
-        // If no @ in URL, credentials must be set separately
         if (!jdbcUrl.contains("@")) {
             cfg.setUsername(firstNonBlank(System.getenv("DB_USER"), System.getenv("PGUSER"), "postgres"));
             cfg.setPassword(firstNonBlank(System.getenv("DB_PASS"), System.getenv("PGPASSWORD"), ""));
@@ -44,18 +44,32 @@ public class DataSourceConfig {
     }
 
     private String toJdbcUrl(String raw) {
-        // Strip any existing jdbc: prefix to normalize
-        String url = raw.replaceFirst("^jdbc:", "");
+        // Remove jdbc: prefix to normalize
+        String url = raw.startsWith("jdbc:") ? raw.substring(5) : raw;
 
-        // Normalize scheme to postgresql://
-        url = url.replaceFirst("^postgres://", "postgresql://");
+        // Normalize to postgresql://
+        if (url.startsWith("postgres://")) {
+            url = "postgresql://" + url.substring("postgres://".length());
+        }
 
-        // Inject port 5432 if missing: host/db → host:5432/db
-        // Pattern: postgresql://user:pass@host/db  (no port)
-        url = url.replaceFirst(
-            "(postgresql://[^@]+@[^/:]+)(/)",
-            "$15432$2"
-        );
+        // Inject :5432 before the path if no port present
+        // e.g. postgresql://user:pass@host/db  →  postgresql://user:pass@host:5432/db
+        if (url.startsWith("postgresql://")) {
+            // Find the @ then look for host part
+            int atIdx = url.lastIndexOf('@');
+            if (atIdx >= 0) {
+                String afterAt = url.substring(atIdx + 1); // host/db or host:port/db
+                if (!afterAt.contains(":")) {
+                    // No port — inject :5432 before the /
+                    int slashIdx = afterAt.indexOf('/');
+                    if (slashIdx >= 0) {
+                        String host = afterAt.substring(0, slashIdx);
+                        String rest = afterAt.substring(slashIdx);
+                        url = url.substring(0, atIdx + 1) + host + ":5432" + rest;
+                    }
+                }
+            }
+        }
 
         return "jdbc:" + url;
     }
