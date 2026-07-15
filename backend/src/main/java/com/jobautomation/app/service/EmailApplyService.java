@@ -6,8 +6,8 @@ import com.jobautomation.app.repository.ApplicationRepository;
 import com.jobautomation.app.repository.JobListingRepository;
 import com.jobautomation.app.repository.TargetCompanyRepository;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,44 +17,34 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service @RequiredArgsConstructor @Slf4j
+@Service @Slf4j
 public class EmailApplyService {
 
-    private final JavaMailSender mailSender;
-    private final ApplicationRepository applicationRepo;
-    private final JobListingRepository jobListingRepo;
-    private final TargetCompanyRepository targetCompanyRepo;
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+
+    @Autowired private ApplicationRepository applicationRepo;
+    @Autowired private JobListingRepository jobListingRepo;
+    @Autowired private TargetCompanyRepository targetCompanyRepo;
 
     @Value("${spring.mail.username:}") private String fromEmail;
 
-    /**
-     * Sends application email for a single application.
-     * Returns true if email was sent successfully.
-     */
     @Transactional
     public boolean applyByEmail(Application app) {
+        if (mailSender == null || fromEmail == null || fromEmail.isBlank()) {
+            log.warn("Mail not configured — cannot send email apply");
+            return false;
+        }
         String hrEmail = resolveHrEmail(app.getJobListing().getCompany());
         if (hrEmail == null) {
             log.info("No HR email for {} — skipping email apply", app.getJobListing().getCompany());
             return false;
         }
-
         try {
             CandidateProfile profile = app.getCandidate();
-            // Try version-specific resume first, fall back to generic
-            String resumePath = "resumes/" + app.getResumeVersion() + "-resume.pdf";
-            ClassPathResource resume = new ClassPathResource(resumePath);
-            if (!resume.exists()) {
-                resume = new ClassPathResource("resumes/javafullstack-resume.pdf");
-            }
-            if (!resume.exists()) {
-                resume = new ClassPathResource("resumes/resume.pdf");
-            }
-
-            if (fromEmail == null || fromEmail.isBlank()) {
-                log.warn("MAIL_USER not configured — cannot send email");
-                return false;
-            }
+            ClassPathResource resume = new ClassPathResource("resumes/" + app.getResumeVersion() + "-resume.pdf");
+            if (!resume.exists()) resume = new ClassPathResource("resumes/javafullstack-resume.pdf");
+            if (!resume.exists()) resume = new ClassPathResource("resumes/resume.pdf");
 
             MimeMessage msg = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true);
@@ -63,15 +53,11 @@ public class EmailApplyService {
             helper.setSubject("Application for " + app.getJobListing().getTitle() +
                               " — " + profile.getName() + " | Fresher Java Full-Stack + GenAI");
             helper.setText(app.getCoverLetter(), false);
-
             if (resume.exists()) {
-                String filename = profile.getName().replace(" ", "-") + "-Resume.pdf";
-                helper.addAttachment(filename, resume);
+                helper.addAttachment(profile.getName().replace(" ", "-") + "-Resume.pdf", resume);
             }
-
             mailSender.send(msg);
 
-            // Mark as APPLIED
             app.setStatus("APPLIED");
             app.setSubmittedAt(LocalDateTime.now());
             app.setAutoSubmitted(true);
@@ -79,11 +65,9 @@ public class EmailApplyService {
             applicationRepo.save(app);
             app.getJobListing().setStatus("APPLIED");
             jobListingRepo.save(app.getJobListing());
-
-            log.info("EMAIL APPLIED: {} at {} → {}", app.getJobListing().getTitle(),
+            log.info("EMAIL APPLIED: {} at {} -> {}", app.getJobListing().getTitle(),
                      app.getJobListing().getCompany(), hrEmail);
             return true;
-
         } catch (Exception e) {
             log.warn("Email apply failed for {} at {}: {}",
                      app.getJobListing().getTitle(), app.getJobListing().getCompany(), e.getMessage());
@@ -91,16 +75,12 @@ public class EmailApplyService {
         }
     }
 
-    /**
-     * Sends emails for all SHORTLISTED applications that have an HR email.
-     */
     @Transactional
     public int applyAllByEmail() {
         List<Application> shortlisted = applicationRepo.findByStatus("SHORTLISTED");
         int sent = 0;
         for (Application app : shortlisted) {
             if (applyByEmail(app)) sent++;
-            // Small delay between emails to avoid spam filters
             try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
         }
         return sent;

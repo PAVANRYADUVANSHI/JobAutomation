@@ -35,10 +35,10 @@ services:
         value: pavanryadavkumsi25@gmail.com
       - key: MAIL_PASS
         value: ""
-      - key: SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH
+      - key: MAIL_SMTP_AUTH
         value: "false"
-      - key: SPRING_AUTOCONFIGURE_EXCLUDE
-        value: ""
+      - key: MAIL_SMTP_STARTTLS
+        value: "false"
       - key: ADZUNA_APP_ID
         value: "062831f8"
       - key: ADZUNA_APP_KEY
