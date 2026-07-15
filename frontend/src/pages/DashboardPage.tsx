@@ -27,17 +27,30 @@ export default function DashboardPage() {
     setPipelineRunning(true);
     setPipelineResult(null);
     try {
-      const res = await schedulerService.run();
-      const { fetched, shortlisted, message } = res.data;
-      setPipelineResult(`✓ ${message}`);
-      dispatch(fetchAnalytics());
-      dispatch(fetchQueue());
-      dispatch(fetchSchedulerLogs());
-    } catch (e: any) {
-      setPipelineResult('✗ Pipeline failed — check backend logs');
-    } finally {
+      await schedulerService.run();
+    } catch {
+      setPipelineResult('✗ Failed to start pipeline — check backend logs');
       setPipelineRunning(false);
+      return;
     }
+    // Poll /status every 4s until done
+    const poll = setInterval(async () => {
+      try {
+        const { data } = await schedulerService.status();
+        if (data.status === 'done' || data.status === 'error') {
+          clearInterval(poll);
+          setPipelineResult(data.status === 'done' ? `✓ ${data.message}` : `✗ ${data.message}`);
+          setPipelineRunning(false);
+          dispatch(fetchAnalytics());
+          dispatch(fetchQueue());
+          dispatch(fetchSchedulerLogs());
+        }
+      } catch {
+        clearInterval(poll);
+        setPipelineResult('✗ Lost connection to backend');
+        setPipelineRunning(false);
+      }
+    }, 4000);
   };
 
   const d = data ?? { applied: 0, responses: 0, interviews: 0, offers: 0, shortlisted: 0, rejected: 0, javaTrackTotal: 0, genaiTrackTotal: 0, javaTrackApplied: 0, genaiTrackApplied: 0, dailyCounts: {}, totalApplications: 0 };

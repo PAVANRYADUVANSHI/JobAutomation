@@ -46,7 +46,7 @@ public class JobAggregatorService {
     @Value("${greenhouse.api.base:https://boards-api.greenhouse.io/v1/boards}") private String greenhouseBase;
     @Value("${lever.api.base:https://api.lever.co/v0/postings}") private String leverBase;
     @Value("${ashby.api.base:https://api.ashbyhq.com/posting-public/job-board}") private String ashbyBase;
-    @Value("${app.rate.limit.ms:1000}") private long rateLimitMs;
+    @Value("${app.rate.limit.ms:200}") private long rateLimitMs;
 
     private final OkHttpClient http = new OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)

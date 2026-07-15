@@ -43,6 +43,7 @@ export const analyticsService = {
 };
 
 export const schedulerService = {
-  run: () => api.post<{ fetched: number; shortlisted: number; message: string }>('/api/scheduler/run'),
+  run: () => api.post<{ status: string; message: string }>('/api/scheduler/run'),
+  status: () => api.get<{ status: string; fetched?: number; shortlisted?: number; message?: string }>('/api/scheduler/status'),
   fetch: () => api.post<{ fetched: number }>('/api/scheduler/fetch'),
 };
