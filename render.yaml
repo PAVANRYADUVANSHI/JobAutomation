@@ -1,10 +1,10 @@
 services:
   - type: web
     name: jobauto-backend
-    env: java
+    env: docker
     plan: free
-    buildCommand: cd backend && ./mvnw clean package -DskipTests
-    startCommand: java -jar backend/target/app-1.0.0.jar
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_DATASOURCE_URL
@@ -23,26 +23,14 @@ services:
         fromDatabase:
           name: jobauto-db
           property: password
-      - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
-        value: org.postgresql.Driver
-      - key: SPRING_JPA_DATABASE_PLATFORM
-        value: org.hibernate.dialect.PostgreSQLDialect
       - key: JWT_SECRET
         generateValue: true
       - key: REVIEW_MODE
         value: MANUAL
       - key: CORS_ORIGINS
         value: https://jobauto-pavan.netlify.app
-      - key: MAIL_HOST
-        value: smtp.gmail.com
-      - key: MAIL_USER
-        value: pavanryadavkumsi25@gmail.com
       - key: MAIL_PASS
         value: ""
-      - key: MAIL_SMTP_AUTH
-        value: "false"
-      - key: MAIL_SMTP_STARTTLS
-        value: "false"
       - key: ADZUNA_APP_ID
         value: "062831f8"
       - key: ADZUNA_APP_KEY
