@@ -5,3 +5,6 @@ backend/target/
 .env
 token.txt
 response.txt
+deploy*.zip
+.github/
+.netlify/
