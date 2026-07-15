@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
-import java.net.URI;
 
 @Configuration
 @Slf4j
@@ -17,15 +16,6 @@ public class DataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
-        String raw = firstNonBlank(
-            System.getenv("DATABASE_URL"),
-            System.getenv("SPRING_DATASOURCE_URL"),
-            System.getProperty("spring.datasource.url"),
-            "jdbc:postgresql://localhost:5432/job_automation"
-        );
-
-        log.info("Raw DB URL scheme: {}", raw.split("://")[0]);
-
         HikariConfig cfg = new HikariConfig();
         cfg.setDriverClassName("org.postgresql.Driver");
         cfg.setMaximumPoolSize(3);
@@ -34,44 +24,68 @@ public class DataSourceConfig {
         cfg.setIdleTimeout(600000);
         cfg.setMaxLifetime(1800000);
 
+        // Strategy 1: use individual PG* vars (most reliable — no URL parsing)
+        String pgHost = env("PGHOST");
+        String pgPort = env("PGPORT", "5432");
+        String pgDb   = env("PGDATABASE", env("POSTGRES_DB", "railway"));
+        String pgUser = env("PGUSER", env("POSTGRES_USER", env("DB_USER", "postgres")));
+        String pgPass = env("PGPASSWORD", env("POSTGRES_PASSWORD", env("DB_PASS", "")));
+
+        if (pgHost != null) {
+            String url = String.format("jdbc:postgresql://%s:%s/%s", pgHost, pgPort, pgDb);
+            log.info("DataSource via PG vars: {}:{}/{}", pgHost, pgPort, pgDb);
+            cfg.setJdbcUrl(url);
+            cfg.setUsername(pgUser);
+            cfg.setPassword(pgPass);
+            return new HikariDataSource(cfg);
+        }
+
+        // Strategy 2: parse DATABASE_URL / SPRING_DATASOURCE_URL manually
+        String raw = env("DATABASE_URL", env("SPRING_DATASOURCE_URL",
+            "jdbc:postgresql://localhost:5432/job_automation"));
+
+        // Strip jdbc: prefix
+        String url = raw.startsWith("jdbc:") ? raw.substring(5) : raw;
+        // Normalize scheme
+        url = url.replaceFirst("^postgres://", "postgresql://")
+                 .replaceFirst("^postgresql://", "postgresql://");
+
+        // Extract user:pass@host:port/db
+        // Format: postgresql://user:pass@host/db  OR  postgresql://user:pass@host:port/db
         try {
-            // Normalize to a parseable URI by ensuring jdbc: prefix is removed
-            // and scheme is postgresql://
-            String uriStr = raw
-                .replaceFirst("^jdbc:", "")
-                .replaceFirst("^postgres://", "postgresql://");
+            String withoutScheme = url.substring("postgresql://".length());
+            int atIdx = withoutScheme.lastIndexOf('@');
+            String userInfo = withoutScheme.substring(0, atIdx);
+            String hostDb = withoutScheme.substring(atIdx + 1);
 
-            URI uri = new URI(uriStr);
-            String host = uri.getHost();
-            int port = uri.getPort() > 0 ? uri.getPort() : 5432;
-            String db = uri.getPath().replaceFirst("^/", "");
-            String userInfo = uri.getUserInfo();
+            String user = userInfo.split(":", 2)[0];
+            String pass = userInfo.split(":", 2)[1];
 
-            String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, db);
-            log.info("DataSource JDBC URL: {}", jdbcUrl);
+            int slashIdx = hostDb.indexOf('/');
+            String hostPort = slashIdx >= 0 ? hostDb.substring(0, slashIdx) : hostDb;
+            String db = slashIdx >= 0 ? hostDb.substring(slashIdx + 1) : "postgres";
+
+            String host = hostPort.contains(":") ? hostPort.split(":")[0] : hostPort;
+            String port = hostPort.contains(":") ? hostPort.split(":")[1] : "5432";
+
+            String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s", host, port, db);
+            log.info("DataSource via URL parse: {}:{}/{}", host, port, db);
             cfg.setJdbcUrl(jdbcUrl);
-
-            if (userInfo != null && userInfo.contains(":")) {
-                cfg.setUsername(userInfo.split(":", 2)[0]);
-                cfg.setPassword(userInfo.split(":", 2)[1]);
-            } else {
-                cfg.setUsername(firstNonBlank(System.getenv("DB_USER"), System.getenv("PGUSER"), "postgres"));
-                cfg.setPassword(firstNonBlank(System.getenv("DB_PASS"), System.getenv("PGPASSWORD"), ""));
-            }
+            cfg.setUsername(user);
+            cfg.setPassword(pass);
         } catch (Exception e) {
-            log.error("Failed to parse DB URL, using raw: {}", e.getMessage());
-            cfg.setJdbcUrl(raw.startsWith("jdbc:") ? raw : "jdbc:" + raw);
-            cfg.setUsername(firstNonBlank(System.getenv("DB_USER"), System.getenv("PGUSER"), "postgres"));
-            cfg.setPassword(firstNonBlank(System.getenv("DB_PASS"), System.getenv("PGPASSWORD"), ""));
+            log.error("URL parse failed: {} — using raw", e.getMessage());
+            cfg.setJdbcUrl(raw.startsWith("jdbc:") ? raw : "jdbc:postgresql://" + raw);
+            cfg.setUsername(pgUser != null ? pgUser : "postgres");
+            cfg.setPassword(pgPass != null ? pgPass : "");
         }
 
         return new HikariDataSource(cfg);
     }
 
-    private String firstNonBlank(String... values) {
-        for (String v : values) {
-            if (v != null && !v.isBlank()) return v;
-        }
-        return "";
+    private String env(String key) { return System.getenv(key); }
+    private String env(String key, String def) {
+        String v = System.getenv(key);
+        return (v != null && !v.isBlank()) ? v : def;
     }
 }
